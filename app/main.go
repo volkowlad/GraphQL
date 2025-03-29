@@ -2,11 +2,14 @@ package main
 
 import (
 	"TestOzon/internal/config"
+	"TestOzon/internal/handler/graph"
 	"TestOzon/internal/repos/memory"
 	"TestOzon/internal/repos/postgres"
+	"TestOzon/internal/server"
 	"TestOzon/internal/service"
 	"context"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 )
@@ -19,12 +22,20 @@ func main() {
 	}
 	log := slog.New(slog.NewTextHandler(os.Stdout, opts))
 
-	cfg := config.InitConfig()
+	cfg, err := config.InitConfig()
+	if err != nil {
+		log.Error("Failed to initialize config", err.Error())
+		os.Exit(1)
+	}
+
+	log.Debug("config", cfg)
 
 	log.Info("Successfully initialized config")
 
 	storageType := flag.String("storage", "memory", "type of storage to use: 'memory' or 'postgres'")
 	flag.Parse()
+
+	var services *service.Service
 
 	switch *storageType {
 	case "postgres":
@@ -42,17 +53,26 @@ func main() {
 		}
 
 		repos := postgres.NewReposPostgres(db)
-		services := service.NewServiceP(repos)
+		services = service.NewServiceP(repos)
 
 	case "memory":
 		db := memory.InitMemory()
 
 		repos := memory.NewReposMemory(db)
-		services := service.NewServiceM(repos)
+		services = service.NewServiceM(repos)
 	default:
 		log.Error("Unsupported storage type", *storageType)
 		log.Info("Use 'memory' or 'postgres'")
 		os.Exit(1)
 	}
 
+	log.Info(fmt.Sprintf("Using storage type: %s", *storageType))
+
+	handlers := graph.NewResolvers(services)
+
+	log.Info("Initializing handlers")
+
+	log.Info("Server starting")
+
+	server.StartServer(cfg.Server.Port, handlers)
 }
