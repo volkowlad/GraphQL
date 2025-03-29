@@ -8,7 +8,7 @@ exec:
   layout: single-file # Only other option is "follow-schema," ie multi-file.
 
   # Only for single-file layout:
-  filename: graph/generated.go
+  filename: internal/handler/graph/generated.go
 
   # Only for follow-schema layout:
   # dir: graph
@@ -27,7 +27,7 @@ exec:
 
 # Where should any generated models go?
 model:
-  filename: graph/model/models_gen.go
+  filename: internal/handler/graph/model/models_gen.go
   package: model
 
   # Optional: Pass in a path to a new gotpl template to use for generating the models
