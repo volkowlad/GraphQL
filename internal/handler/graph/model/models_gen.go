@@ -2,12 +2,17 @@
 
 package model
 
+import (
+	"github.com/google/uuid"
+	"time"
+)
+
 type Comment struct {
-	ID        string     `json:"id"`
-	PostID    string     `json:"postId"`
-	ParentID  *string    `json:"parentId,omitempty"`
+	ID        uuid.UUID  `json:"id"`
+	PostID    uuid.UUID  `json:"postId"`
+	ParentID  *uuid.UUID `json:"parentId,omitempty"`
 	Content   string     `json:"content"`
-	CreatedAt string     `json:"createdAt"`
+	CreatedAt time.Time  `json:"createdAt"`
 	Replies   []*Comment `json:"replies"`
 }
 
@@ -15,11 +20,11 @@ type Mutation struct {
 }
 
 type Post struct {
-	ID            string     `json:"id"`
+	ID            uuid.UUID  `json:"id"`
 	Title         string     `json:"title"`
 	Content       string     `json:"content"`
 	AllowComments bool       `json:"allowComments"`
-	CreatedAt     string     `json:"createdAt"`
+	CreatedAt     time.Time  `json:"createdAt"`
 	Comments      []*Comment `json:"comments"`
 }
 

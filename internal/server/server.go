@@ -1,7 +1,7 @@
 package main
 
 import (
-	"TestOzon/graph"
+	graph2 "TestOzon/internal/handler/graph"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +22,7 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.New(graph2.NewExecutableSchema(graph2.Config{Resolvers: &graph2.Resolver{}}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
