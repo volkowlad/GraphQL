@@ -21,8 +21,6 @@ func (p *PostMem) CreatePost(_ context.Context, title, content string, allowComm
 	p.db.mu.Lock()
 	defer p.db.mu.Unlock()
 
-	//_ = ctx
-
 	post := &model.Post{
 		ID:            uuid.New(),
 		Title:         title,
@@ -47,7 +45,10 @@ func (p *PostMem) GetPostByID(_ context.Context, id uuid.UUID, limit, offset int
 	}
 
 	for _, comment := range p.db.Comments[id] {
-		post.Comments = append(post.Comments, comment)
+		if len(comment.ParentID) == 0 {
+			post.Comments = append(post.Comments, comment)
+		}
+
 	}
 
 	return post, nil
@@ -56,8 +57,6 @@ func (p *PostMem) GetPostByID(_ context.Context, id uuid.UUID, limit, offset int
 func (p *PostMem) GetPosts(_ context.Context) ([]*model.Post, error) {
 	p.db.mu.Lock()
 	defer p.db.mu.Unlock()
-
-	//_ = ctx
 
 	var posts []*model.Post
 	for _, post := range p.db.Posts {

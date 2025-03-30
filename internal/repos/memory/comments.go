@@ -21,6 +21,10 @@ func (c *CommentsMem) CreateComment(_ context.Context, postID uuid.UUID, parentI
 	c.db.mu.Lock()
 	defer c.db.mu.Unlock()
 
+	if c.db.Posts[postID].AllowComments == false {
+		return nil, errors.New("post comments are not allowed")
+	}
+
 	comment := &model.Comment{
 		ID:        uuid.New(),
 		PostID:    postID,
@@ -37,8 +41,6 @@ func (c *CommentsMem) CreateComment(_ context.Context, postID uuid.UUID, parentI
 func (c *CommentsMem) GetComments(_ context.Context, postId uuid.UUID, parentId *uuid.UUID, limit, offset int) ([]*model.Comment, error) {
 	c.db.mu.Lock()
 	defer c.db.mu.Unlock()
-
-	//_ = ctx
 
 	comments := c.db.Comments[postId]
 	if offset >= len(comments) {
@@ -64,8 +66,6 @@ func (c *CommentsMem) GetComments(_ context.Context, postId uuid.UUID, parentId 
 func (c *CommentsMem) AllowComments(_ context.Context, postID uuid.UUID, allow bool) (bool, error) {
 	c.db.mu.Lock()
 	defer c.db.mu.Unlock()
-
-	//_ = ctx
 
 	post, exists := c.db.Posts[postID]
 	if !exists {
