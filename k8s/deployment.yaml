@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-ozon
+  namespace: default
+  labels:
+    app: test-ozon
+spec:
+  # количестов запускаемых подов
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-ozon
+  template:
+    metadata:
+      labels:
+        app: test-ozon
+    spec:
+      containers:
+        - name: test-ozon
+          # образ запускаемого конейнера в поде
+          image: volkowlad/test-ozon:v0.1.0
+          ports:
+            - containerPort: 8080
