@@ -68,7 +68,7 @@ func main() {
 
 	log.Info(fmt.Sprintf("Using storage type: %s", *storageType))
 
-	handlers := graph.NewResolvers(services)
+	handlers := graph.NewResolver(services)
 
 	log.Info("Initializing handlers")
 
