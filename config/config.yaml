@@ -7,3 +7,5 @@ db:
   user: "postgres"
   name: "postgres"
   sslmode: "disable"
+
+storage: "memory"

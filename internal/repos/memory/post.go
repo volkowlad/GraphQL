@@ -17,11 +17,11 @@ func NewPostMem(db *StoreMemory) *PostMem {
 	return &PostMem{db: db}
 }
 
-func (p *PostMem) CreatePost(ctx context.Context, title, content string, allowComments bool) (*model.Post, error) {
+func (p *PostMem) CreatePost(_ context.Context, title, content string, allowComments bool) (*model.Post, error) {
 	p.db.mu.Lock()
 	defer p.db.mu.Unlock()
 
-	_ = ctx
+	//_ = ctx
 
 	post := &model.Post{
 		ID:            uuid.New(),
@@ -36,11 +36,9 @@ func (p *PostMem) CreatePost(ctx context.Context, title, content string, allowCo
 	return post, nil
 }
 
-func (p *PostMem) GetPostByID(ctx context.Context, id uuid.UUID, limit, offset int) (*model.Post, error) {
+func (p *PostMem) GetPostByID(_ context.Context, id uuid.UUID, limit, offset int) (*model.Post, error) {
 	p.db.mu.Lock()
 	defer p.db.mu.Unlock()
-
-	_ = ctx
 
 	post, exist := p.db.Posts[id]
 	if !exist {
@@ -48,14 +46,18 @@ func (p *PostMem) GetPostByID(ctx context.Context, id uuid.UUID, limit, offset i
 		return nil, errors.New("post not found")
 	}
 
+	for _, comment := range p.db.Comments[id] {
+		post.Comments = append(post.Comments, comment)
+	}
+
 	return post, nil
 }
 
-func (p *PostMem) GetPosts(ctx context.Context) ([]*model.Post, error) {
+func (p *PostMem) GetPosts(_ context.Context) ([]*model.Post, error) {
 	p.db.mu.Lock()
 	defer p.db.mu.Unlock()
 
-	_ = ctx
+	//_ = ctx
 
 	var posts []*model.Post
 	for _, post := range p.db.Posts {

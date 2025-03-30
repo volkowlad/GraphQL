@@ -1,10 +1,12 @@
 package config
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
+	"path/filepath"
 )
 
 type Config struct {
@@ -26,23 +28,23 @@ type DB struct {
 }
 
 func initViper() error {
-	viper.AddConfigPath("config")
+	viper.AddConfigPath("../config")
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	return viper.ReadInConfig()
 }
 
-func InitConfig() *Config {
-	err := godotenv.Load(".env")
+func InitConfig() (*Config, error) {
+	err := godotenv.Load(filepath.Join("../", ".env"))
 	if err != nil {
-		slog.Error("Error loading config file", err)
-		return nil
+		slog.Error(fmt.Sprintf("Error loading config file: %s", err.Error()))
+		return nil, err
 	}
 
 	err = initViper()
 	if err != nil {
-		slog.Error("Error initializing config", err)
-		return nil
+		slog.Error(fmt.Sprintf("Error initializing config: %s", err.Error()))
+		return nil, err
 	}
 
 	return &Config{
@@ -58,5 +60,5 @@ func InitConfig() *Config {
 			DBName:   viper.GetString("db.dbname"),
 			SSLMode:  viper.GetString("db.sslmode"),
 		},
-	}
+	}, nil
 }
