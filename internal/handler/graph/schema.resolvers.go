@@ -4,9 +4,20 @@ import (
 	"TestOzon/internal/handler/graph/model"
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 )
+
+var commentChannels = make(map[uuid.UUID][]chan *model.Comment)
+
+func sendNewComment(postID uuid.UUID, comment *model.Comment) {
+	if subs, ok := commentChannels[postID]; ok {
+		for _, ch := range subs {
+			ch <- comment
+		}
+	}
+}
 
 // CreatePost is the resolver for the createPost field.
 func (r *mutationResolver) CreatePost(ctx context.Context, title string, content string, allowComments bool) (*model.Post, error) {
@@ -15,7 +26,15 @@ func (r *mutationResolver) CreatePost(ctx context.Context, title string, content
 
 // AddComment is the resolver for the addComment field.
 func (r *mutationResolver) AddComment(ctx context.Context, postID uuid.UUID, parentID *uuid.UUID, content string) (*model.Comment, error) {
-	return r.services.CreateComment(ctx, postID, parentID, content)
+	comment, err := r.services.CreateComment(ctx, postID, parentID, content)
+	if err != nil {
+		slog.Error(fmt.Sprintf("failed to add comment to post with ID %v and parent ID %v. Reason: %s", postID, parentID, err.Error()))
+		return nil, err
+	}
+
+	sendNewComment(postID, comment)
+
+	return comment, nil
 }
 
 // AllowComments is the resolver for the allowComments field.
@@ -43,8 +62,18 @@ func (r *queryResolver) Comment(ctx context.Context, postID uuid.UUID, parentID 
 }
 
 // NewComment is the resolver for the newComment field.
-func (r *subscriptionResolver) NewComment(ctx context.Context, postID uuid.UUID) (<-chan *model.Comment, error) {
-	panic(fmt.Errorf("not implemented: NewComment - newComment"))
+func (r *subscriptionResolver) NewComment(_ context.Context, postID uuid.UUID) (<-chan *model.Comment, error) {
+	commentChan := make(chan *model.Comment, 1)
+
+	if _, ok := commentChannels[postID]; !ok {
+		commentChannels[postID] = []chan *model.Comment{}
+	}
+
+	commentChannels[postID] = append(commentChannels[postID], commentChan)
+
+	slog.Info(fmt.Sprintf("new subscription %v", postID))
+
+	return commentChan, nil
 }
 
 // Mutation returns MutationResolver implementation.
