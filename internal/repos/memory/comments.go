@@ -17,11 +17,9 @@ func NewCommentsMem(db *StoreMemory) *CommentsMem {
 	return &CommentsMem{db: db}
 }
 
-func (c *CommentsMem) CreateComment(ctx context.Context, postID uuid.UUID, parentID *uuid.UUID, content string) (*model.Comment, error) {
+func (c *CommentsMem) CreateComment(_ context.Context, postID uuid.UUID, parentID *uuid.UUID, content string) (*model.Comment, error) {
 	c.db.mu.Lock()
 	defer c.db.mu.Unlock()
-
-	_ = ctx
 
 	comment := &model.Comment{
 		ID:        uuid.New(),
@@ -36,15 +34,15 @@ func (c *CommentsMem) CreateComment(ctx context.Context, postID uuid.UUID, paren
 	return comment, nil
 }
 
-func (c *CommentsMem) GetComments(ctx context.Context, postId uuid.UUID, parentId *uuid.UUID, limit, offset int) ([]*model.Comment, error) {
+func (c *CommentsMem) GetComments(_ context.Context, postId uuid.UUID, parentId *uuid.UUID, limit, offset int) ([]*model.Comment, error) {
 	c.db.mu.Lock()
 	defer c.db.mu.Unlock()
 
-	_ = ctx
+	//_ = ctx
 
 	comments := c.db.Comments[postId]
 	if offset >= len(comments) {
-		slog.Error("offset more then length of comments", limit)
+		slog.Error("offset more then length of comments", offset)
 		return []*model.Comment{}, errors.New("offset out of range")
 	}
 
@@ -63,11 +61,11 @@ func (c *CommentsMem) GetComments(ctx context.Context, postId uuid.UUID, parentI
 	return results, nil
 }
 
-func (c *CommentsMem) AllowComments(ctx context.Context, postID uuid.UUID, allow bool) (bool, error) {
+func (c *CommentsMem) AllowComments(_ context.Context, postID uuid.UUID, allow bool) (bool, error) {
 	c.db.mu.Lock()
 	defer c.db.mu.Unlock()
 
-	_ = ctx
+	//_ = ctx
 
 	post, exists := c.db.Posts[postID]
 	if !exists {
