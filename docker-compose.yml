@@ -7,10 +7,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-      args:
-        STORAGE: ${STORAGE}
-    environment:
-      - STORAGE=${STORAGE}
+    command: ["--storage=${STORAGE}"]
     ports:
       - "8080:8080"
     depends_on:
