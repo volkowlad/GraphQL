@@ -5,7 +5,5 @@ db:
   host: "db"
   port: "5432"
   user: "postgres"
-  name: "postgres"
+  dbname: "postgres"
   sslmode: "disable"
-
-storage: "memory"

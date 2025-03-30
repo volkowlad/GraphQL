@@ -28,11 +28,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Debug("config", cfg)
-
 	log.Info("Successfully initialized config")
 
-	storageType := flag.String("storage", "memory", "type of storage to use: 'memory' or 'postgres'")
+	storageType := flag.String("storage", "postgres", "type of storage to use: 'memory' or 'postgres'")
 	flag.Parse()
 
 	var services *service.Service

@@ -31,7 +31,7 @@ func (c *CommentDB) CreateComment(ctx context.Context, postID uuid.UUID, parentI
 	queryAllow := fmt.Sprintf(`
 SELECT allow_comments
 FROM %s
-WHERE uuid = $1`, postTable)
+WHERE id = $1`, postTable)
 
 	err = tx.QueryRow(ctx, queryAllow, postID).Scan(&allow)
 	if err != nil {
@@ -46,7 +46,7 @@ WHERE uuid = $1`, postTable)
 	query := fmt.Sprintf(`
 INSERT INTO %s (post_id, parent_id, content)
 VALUES ($1, $2, $3)
-RETURNING id, uuid, created_at`, commentTable)
+RETURNING id, created_at`, commentTable)
 
 	if parentID == &uuid.Nil {
 		parentID = &uuid.UUID{}
@@ -76,7 +76,7 @@ func (c *CommentDB) GetComments(ctx context.Context, postId uuid.UUID, parentId 
 	var comments []*model.Comment
 
 	query := fmt.Sprintf(`
-SELECT id, uuid, post_id, parent_id, content, created_at
+SELECT id, post_id, parent_id, content, created_at
 FROM %s
 WHERE parent_id = $1 and post_id = $2
 ORDER BY created_at DESC
@@ -90,7 +90,7 @@ LIMIT $2 OFFSET %3`, commentTable)
 	}
 
 	for rows.Next() {
-		var comment *model.Comment
+		comment := &model.Comment{}
 		if err := rows.Scan(&comment.ID, &comment.PostID, &comment.ParentID, &comment.Content, &comment.CreatedAt); err != nil {
 			tx.Rollback(ctx)
 			slog.Error("error to get comments", err.Error())

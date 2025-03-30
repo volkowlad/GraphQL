@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
-	"path/filepath"
 )
 
 type Config struct {
@@ -28,14 +27,14 @@ type DB struct {
 }
 
 func initViper() error {
-	viper.AddConfigPath("../config")
+	viper.AddConfigPath("config")
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	return viper.ReadInConfig()
 }
 
 func InitConfig() (*Config, error) {
-	err := godotenv.Load(filepath.Join("../", ".env"))
+	err := godotenv.Load(".env")
 	if err != nil {
 		slog.Error(fmt.Sprintf("Error loading config file: %s", err.Error()))
 		return nil, err
