@@ -9,4 +9,4 @@ COPY ./ ./
 RUN go mod download
 RUN go build -o post-app ./app/main.go
 
-CMD ["./post-app"]
+ENTRYPOINT ["./post-app"]
