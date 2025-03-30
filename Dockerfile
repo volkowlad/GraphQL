@@ -1,9 +1,6 @@
 FROM golang:1.24
 ENV GOPATH=/
 
-ARG STORAGE=memory
-ENV STORAGE=${STORAGE}
-
 COPY ./ ./
 
 RUN go mod download
