@@ -72,5 +72,10 @@ func main() {
 
 	log.Info("Server starting")
 
-	server.StartServer(cfg.Server.Port, handlers)
+	srv := new(server.Server)
+	err = srv.StartServer(ctx, cfg.Server.Port, handlers)
+	if err != nil {
+		log.Error("Failed to start server", err.Error())
+		os.Exit(1)
+	}
 }
