@@ -21,6 +21,7 @@ func sendNewComment(postID uuid.UUID, comment *model.Comment) {
 
 // CreatePost is the resolver for the createPost field.
 func (r *mutationResolver) CreatePost(ctx context.Context, title string, content string, allowComments bool) (*model.Post, error) {
+	slog.Error("CreatePost called")
 	return r.services.CreatePost(ctx, title, content, allowComments)
 }
 
@@ -32,18 +33,24 @@ func (r *mutationResolver) AddComment(ctx context.Context, postID uuid.UUID, par
 		return nil, err
 	}
 
+	slog.Info(fmt.Sprintf("successfully added comment to post with ID %v and parent ID %v", postID, parentID))
+
 	sendNewComment(postID, comment)
+
+	slog.Info(fmt.Sprintf("subscribes got new comment from post with ID %v", postID))
 
 	return comment, nil
 }
 
 // AllowComments is the resolver for the allowComments field.
 func (r *mutationResolver) AllowComments(ctx context.Context, postID uuid.UUID, allowComments bool) (bool, error) {
+	slog.Info(fmt.Sprintf("allowComments is %t on post with ID %v", allowComments, postID))
 	return r.services.AllowComments(ctx, postID, allowComments)
 }
 
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
+	slog.Info("GetPosts called")
 	return r.services.GetPosts(ctx)
 }
 
@@ -51,6 +58,7 @@ func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
 func (r *queryResolver) Post(ctx context.Context, uuid uuid.UUID, limit int32, offset int32) (*model.Post, error) {
 	limitInt := int(limit)
 	offsetInt := int(offset)
+	slog.Info(fmt.Sprintf("GetPost called, uuid: %v", uuid))
 	return r.services.GetPostByID(ctx, uuid, limitInt, offsetInt)
 }
 
@@ -58,6 +66,7 @@ func (r *queryResolver) Post(ctx context.Context, uuid uuid.UUID, limit int32, o
 func (r *queryResolver) Comment(ctx context.Context, postID uuid.UUID, parentID *uuid.UUID, limit int32, offset int32) ([]*model.Comment, error) {
 	limitInt := int(limit)
 	offsetInt := int(offset)
+	slog.Info(fmt.Sprintf("GetComment called, postID: %v", postID))
 	return r.services.GetComments(ctx, postID, parentID, limitInt, offsetInt)
 }
 
