@@ -6,3 +6,6 @@ postgres:
 
 down:
 	docker compose -f docker-compose.yml down
+
+test:
+	go test ./internal/repos/...

@@ -4,6 +4,7 @@ import (
 	"TestOzon/internal/handler/graph/model"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"log/slog"
 	"time"
@@ -20,6 +21,16 @@ func NewPostMem(db *StoreMemory) *PostMem {
 func (p *PostMem) CreatePost(_ context.Context, title, content string, allowComments bool) (*model.Post, error) {
 	p.db.mu.Lock()
 	defer p.db.mu.Unlock()
+
+	if title == "" {
+		slog.Error(fmt.Sprintf("title must not be empty"))
+		return nil, errors.New("title must not be empty")
+	}
+
+	if content == "" {
+		slog.Error(fmt.Sprintf("content must not be empty"))
+		return nil, errors.New("content must not be empty")
+	}
 
 	post := &model.Post{
 		ID:            uuid.New(),
@@ -48,7 +59,6 @@ func (p *PostMem) GetPostByID(_ context.Context, id uuid.UUID, limit, offset int
 		if len(comment.ParentID) == 0 {
 			post.Comments = append(post.Comments, comment)
 		}
-
 	}
 
 	return post, nil

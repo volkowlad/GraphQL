@@ -23,7 +23,7 @@ func (c *CommentDB) CreateComment(ctx context.Context, postID uuid.UUID, parentI
 
 	tx, err := c.db.Begin(ctx)
 	if err != nil {
-		slog.Error("error to begin creating post", err.Error())
+		slog.Error(fmt.Sprintf("error to begin creating post: %s", err.Error()))
 		return &model.Comment{}, err
 	}
 
@@ -35,11 +35,11 @@ WHERE id = $1`, postTable)
 
 	err = tx.QueryRow(ctx, queryAllow, postID).Scan(&allow)
 	if err != nil {
-		slog.Error("error to query post comments", err.Error())
+		slog.Error(fmt.Sprintf("error to query post comments: %s", err.Error()))
 		return &model.Comment{}, err
 	}
 	if !allow {
-		slog.Error("comments not allowed", postID)
+		slog.Error(fmt.Sprintf("comments not allowed: %s", postID))
 		return &model.Comment{}, errors.New("comments not allowed")
 	}
 
@@ -55,7 +55,7 @@ RETURNING id, created_at`, commentTable)
 	err = tx.QueryRow(ctx, query, postID, parentID, content).Scan(&comment.ID, &comment.CreatedAt)
 	if err != nil {
 		tx.Rollback(ctx)
-		slog.Error("error to create post", err.Error())
+		slog.Error(fmt.Sprintf("error to create post: %s", err.Error()))
 		return &model.Comment{}, err
 	}
 
@@ -69,7 +69,7 @@ RETURNING id, created_at`, commentTable)
 func (c *CommentDB) GetComments(ctx context.Context, postId uuid.UUID, parentId *uuid.UUID, limit, offset int) ([]*model.Comment, error) {
 	tx, err := c.db.Begin(ctx)
 	if err != nil {
-		slog.Error("error to begin creating post", err.Error())
+		slog.Error(fmt.Sprintf("error to begin creating post: %s", err.Error()))
 		return []*model.Comment{}, err
 	}
 
@@ -80,12 +80,12 @@ SELECT id, post_id, parent_id, content, created_at
 FROM %s
 WHERE parent_id = $1 and post_id = $2
 ORDER BY created_at DESC
-LIMIT $2 OFFSET %3`, commentTable)
+LIMIT $3 OFFSET $4`, commentTable)
 
 	rows, err := tx.Query(ctx, query, parentId, postId, limit, offset)
 	if err != nil {
 		tx.Rollback(ctx)
-		slog.Error("error to get comments", err.Error())
+		slog.Error(fmt.Sprintf("error to get comments: %s", err.Error()))
 		return []*model.Comment{}, err
 	}
 
@@ -93,7 +93,7 @@ LIMIT $2 OFFSET %3`, commentTable)
 		comment := &model.Comment{}
 		if err := rows.Scan(&comment.ID, &comment.PostID, &comment.ParentID, &comment.Content, &comment.CreatedAt); err != nil {
 			tx.Rollback(ctx)
-			slog.Error("error to get comments", err.Error())
+			slog.Error(fmt.Sprintf("error to get comments: %s", err.Error()))
 			return []*model.Comment{}, err
 		}
 
@@ -101,7 +101,7 @@ LIMIT $2 OFFSET %3`, commentTable)
 	}
 	if err := rows.Err(); err != nil {
 		tx.Rollback(ctx)
-		slog.Error("error to get comments", err.Error())
+		slog.Error(fmt.Sprintf("error to get comments: %s", err.Error()))
 		return []*model.Comment{}, err
 	}
 
@@ -111,7 +111,7 @@ LIMIT $2 OFFSET %3`, commentTable)
 func (c *CommentDB) AllowComments(ctx context.Context, postID uuid.UUID, allow bool) (bool, error) {
 	tx, err := c.db.Begin(ctx)
 	if err != nil {
-		slog.Error("error to begin creating post", err.Error())
+		slog.Error(fmt.Sprintf("error to begin creating post: %s", err.Error()))
 		return false, err
 	}
 
@@ -123,7 +123,7 @@ WHERE id = $2`, postTable)
 	_, err = tx.Exec(ctx, query, allow, postID)
 	if err != nil {
 		tx.Rollback(ctx)
-		slog.Error("error to allow comments", err.Error())
+		slog.Error(fmt.Sprintf("error to allow comments: %s", err.Error()))
 		return false, err
 	}
 
