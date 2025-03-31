@@ -4,6 +4,7 @@ import (
 	"TestOzon/internal/handler/graph/model"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"log/slog"
 	"time"
@@ -22,7 +23,18 @@ func (c *CommentsMem) CreateComment(_ context.Context, postID uuid.UUID, parentI
 	defer c.db.mu.Unlock()
 
 	if c.db.Posts[postID].AllowComments == false {
+		slog.Error("post comments are not allowed")
 		return nil, errors.New("post comments are not allowed")
+	}
+
+	if c.db.Posts[postID] == nil {
+		slog.Error("post not found")
+		return nil, errors.New("post not found")
+	}
+
+	if content == "" {
+		slog.Error("content is empty")
+		return nil, errors.New("content is empty")
 	}
 
 	comment := &model.Comment{
@@ -42,9 +54,14 @@ func (c *CommentsMem) GetComments(_ context.Context, postId uuid.UUID, parentId 
 	c.db.mu.Lock()
 	defer c.db.mu.Unlock()
 
+	if c.db.Posts[postId] == nil {
+		slog.Error("post not found")
+		return nil, errors.New("post not found")
+	}
+
 	comments := c.db.Comments[postId]
 	if offset >= len(comments) {
-		slog.Error("offset more then length of comments", offset)
+		slog.Error(fmt.Sprintf("offset %d more then length of comments", offset))
 		return []*model.Comment{}, errors.New("offset out of range")
 	}
 
@@ -69,7 +86,7 @@ func (c *CommentsMem) AllowComments(_ context.Context, postID uuid.UUID, allow b
 
 	post, exists := c.db.Posts[postID]
 	if !exists {
-		slog.Error("post not exists", postID)
+		slog.Error(fmt.Sprintf("post %v not exists", postID))
 		return false, errors.New("post not exists")
 	}
 

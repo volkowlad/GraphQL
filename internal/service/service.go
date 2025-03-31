@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:generate mockgen -source=service.go -destination=mock/mock.go
+
 type Database interface {
 	CreatePost(ctx context.Context, title, context string, allowComments bool) (*model.Post, error)
 	GetPostByID(ctx context.Context, id uuid.UUID, limit, offset int) (*model.Post, error)

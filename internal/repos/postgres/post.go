@@ -3,6 +3,7 @@ package postgres
 import (
 	"TestOzon/internal/handler/graph/model"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,12 +18,22 @@ func NewPostDB(db *pgxpool.Pool) *PostDB {
 	return &PostDB{db: db}
 }
 
-func (p *PostDB) CreatePost(ctx context.Context, title, context string, allowComments bool) (*model.Post, error) {
+func (p *PostDB) CreatePost(ctx context.Context, title, content string, allowComments bool) (*model.Post, error) {
 	var post model.Post
+
+	if title == "" {
+		slog.Error(fmt.Sprintf("title must not be empty"))
+		return nil, errors.New("title must not be empty")
+	}
+
+	if content == "" {
+		slog.Error(fmt.Sprintf("content must not be empty"))
+		return nil, errors.New("content must not be empty")
+	}
 
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
-		slog.Error("error to begin creating post", err.Error())
+		slog.Error(fmt.Sprintf("error to begin creating post: %s", err.Error()))
 		return &model.Post{}, err
 	}
 
@@ -31,10 +42,10 @@ INSERT INTO %s (title, content, allow_comments, created_at)
 VALUES ($1, $2, $3, now())
 RETURNING id, title, content, allow_comments, created_at`, postTable)
 
-	err = tx.QueryRow(ctx, query, title, context, allowComments).Scan(&post.ID, &post.Title, &post.Content, &post.AllowComments, &post.CreatedAt)
+	err = tx.QueryRow(ctx, query, title, content, allowComments).Scan(&post.ID, &post.Title, &post.Content, &post.AllowComments, &post.CreatedAt)
 	if err != nil {
 		tx.Rollback(ctx)
-		slog.Error("error to create post", err.Error())
+		slog.Error(fmt.Sprintf("error to create post: %s", err.Error()))
 		return &model.Post{}, err
 	}
 
@@ -47,7 +58,7 @@ func (p *PostDB) GetPostByID(ctx context.Context, id uuid.UUID, limit, offset in
 
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
-		slog.Error("error to begin creating post", err.Error())
+		slog.Error(fmt.Sprintf("error to begin creating post: %s", err.Error()))
 		return &model.Post{}, err
 	}
 
@@ -58,7 +69,7 @@ FROM %s WHERE id = $1`, postTable)
 	err = tx.QueryRow(ctx, query, id).Scan(&post.ID, &post.Title, &post.Content, &post.AllowComments, &post.CreatedAt)
 	if err != nil {
 		tx.Rollback(ctx)
-		slog.Error("error to get post", err.Error())
+		slog.Error(fmt.Sprintf("error to get post: %s", err.Error()))
 		return &model.Post{}, err
 	}
 
@@ -71,7 +82,7 @@ LIMIT $2 OFFSET $3`, commentTable)
 	rows, err := tx.Query(ctx, queryComments, id, limit, offset)
 	if err != nil {
 		tx.Rollback(ctx)
-		slog.Error("error to comments post", err.Error())
+		slog.Error(fmt.Sprintf("error to comments post: %s", err.Error()))
 		return &model.Post{}, err
 	}
 
@@ -79,7 +90,7 @@ LIMIT $2 OFFSET $3`, commentTable)
 		comment := &model.Comment{}
 		if err := rows.Scan(&comment.ID, &comment.PostID, &comment.ParentID, &comment.Content, &comment.CreatedAt); err != nil {
 			tx.Rollback(ctx)
-			slog.Error("failed to get one comment", err.Error())
+			slog.Error(fmt.Sprintf("failed to get one comment: %s", err.Error()))
 			return &model.Post{}, err
 		}
 
@@ -87,7 +98,7 @@ LIMIT $2 OFFSET $3`, commentTable)
 	}
 	if err := rows.Err(); err != nil {
 		tx.Rollback(ctx)
-		slog.Error("failed to get comments", err.Error())
+		slog.Error(fmt.Sprintf("failed to get comments: %s", err.Error()))
 		return &model.Post{}, err
 	}
 
@@ -100,7 +111,7 @@ func (p *PostDB) GetPosts(ctx context.Context) ([]*model.Post, error) {
 
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
-		slog.Error("error to begin get posts", err.Error())
+		slog.Error(fmt.Sprintf("error to begin get posts: %s", err.Error()))
 		return []*model.Post{}, err
 	}
 
@@ -110,7 +121,7 @@ FROM %s`, postTable)
 	rows, err := tx.Query(ctx, query)
 	if err != nil {
 		tx.Rollback(ctx)
-		slog.Error("error to get posts", err.Error())
+		slog.Error(fmt.Sprintf("error to get posts: %s", err.Error()))
 		return []*model.Post{}, err
 	}
 
@@ -118,7 +129,7 @@ FROM %s`, postTable)
 		post := &model.Post{}
 		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.AllowComments, &post.CreatedAt); err != nil {
 			tx.Rollback(ctx)
-			slog.Error("failed to get one post", err.Error())
+			slog.Error(fmt.Sprintf("failed to get one post: %s", err.Error()))
 			return []*model.Post{}, err
 		}
 
@@ -126,7 +137,7 @@ FROM %s`, postTable)
 	}
 	if err := rows.Err(); err != nil {
 		tx.Rollback(ctx)
-		slog.Error("failed to get posts", err.Error())
+		slog.Error(fmt.Sprintf("failed to get posts: %s", err.Error()))
 		return []*model.Post{}, err
 	}
 
