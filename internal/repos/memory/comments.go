@@ -77,6 +77,11 @@ func (c *CommentsMem) GetComments(_ context.Context, postId uuid.UUID, parentId 
 		}
 	}
 
+	if results == nil {
+		slog.Error(fmt.Sprintf("comments witn parents_id %v not found", parentId))
+		return []*model.Comment{}, errors.New("no comments found")
+	}
+
 	return results, nil
 }
 
