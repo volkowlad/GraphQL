@@ -61,6 +61,11 @@ func (p *PostMem) GetPostByID(_ context.Context, id uuid.UUID, limit, offset int
 		}
 	}
 
+	if len(post.Comments) == 0 {
+		slog.Error(fmt.Sprintf("post with id %v comments not found", id))
+		return nil, errors.New("post comments not found")
+	}
+
 	return post, nil
 }
 
@@ -71,6 +76,11 @@ func (p *PostMem) GetPosts(_ context.Context) ([]*model.Post, error) {
 	var posts []*model.Post
 	for _, post := range p.db.Posts {
 		posts = append(posts, post)
+	}
+
+	if len(posts) == 0 {
+		slog.Error(fmt.Sprintf("posts not found"))
+		return nil, errors.New("posts not found")
 	}
 
 	return posts, nil
